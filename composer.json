@@ -4,8 +4,10 @@
     "type": "magento2-component",
     "license": "OSL-3.0",
     "require": {
-        "renaissance/theme-frontend-open-source": "^1.0",
-        "paypal/module-braintree-core": "*"
+        "renaissance/theme-frontend-open-source": "^1.0"
+    },
+    "suggest": {
+        "paypal/module-braintree-core": "Required if PayPal Braintree payment is enabled"
     },
     "extra": {
         "map": [
