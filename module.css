@@ -1,0 +1,561 @@
+/* Vanilla/blank: PayPal_Braintree module CSS.
+   Braintree's checkout-facing storefront pieces, ported from the MODULE-level
+   vendor/paypal/module-braintree-core/view/frontend/web/css/source/
+   _extend.less (with variables/_colors.less resolved) against the COMPILED
+   pub/static/frontend/Magento/blank css: the 3D Secure modal, the Apple Pay
+   and Google Pay buttons, the PP Credit calculator, the hosted-fields credit
+   card form (controls + inline errors), the ACH / LPM / vault payment forms,
+   the express-payments band (PDP/cart) and the Pay Later message containers.
+
+   NOT ported: _account-saved-payments.less (the .account.vault-cards-listaction
+   "Stored Payment Methods" SPA page, ~280 lines of Braintree-only account UI
+   incl. its own modal system); out of the checkout-essentials scope here and
+   the stock Magento_Vault account page is already ported. Add it later as its
+   own section if that page goes live.
+
+   What is CONSUMED, not re-implemented:
+   - Field labels / controls ride the lib forms component; the hosted-field
+     iframe boxes (.hosted-control) only get their border box here.
+   - The required-asterisk / error colour is the lib --color-error token.
+   - The express "or" divider and button grid are plain flex (the source is
+     already float-free).
+
+   Source-bug resolutions (the module's LESS ships broken values that the
+   browser silently drops; resolved to the obvious intended literals):
+   - .braintree-three-d-modal { z-index: @color-black } compiles to the
+     invalid `z-index: #000` and is dropped by the browser; NOT invented here
+     (the modal layers by DOM order on stock blank too).
+   - The PP Credit gradient/hover/active backgrounds reference
+     `braintree_color-ppcredit-*` with a missing @; compiled blank ships the
+     literal words and the browser drops the declarations. Restored to the
+     module's own palette (#009cde light / #003087 dark) so the white text
+     is readable.
+   - The paylater PDP container's `.page-product-bundle` line compiles to a
+     descendant of the container (a missing & in the source); dead on any
+     page (body classes never sit under it), dropped. */
+@layer modules {
+
+  /* ===== 3D Secure modal ================================================ */
+
+  .braintree-three-d-modal {
+    display: flex;
+    align-items: center;
+    position: fixed;
+    inset: 0; /* was top/left + 100vw/100vh; this modal has no body scroll lock, so the vw form overhung the scrollbar on a scrollable page */
+    visibility: visible;
+
+    & .bt-modal-frame {
+      background-color: var(--color-white);
+      border-radius: 6px;
+      height: 42rem; /* 420px */
+      margin: auto;
+      width: 44rem; /* 440px */
+      z-index: 2;
+    }
+
+    & .bt-modal-body {
+      background-color: var(--color-white);
+      border: 1px solid lightgray;
+      height: 38rem; /* 380px */
+      margin: var(--indent-base); /* 20px */
+    }
+
+    & .bt-mask {
+      background-color: var(--color-black);
+      height: 100%;
+      inset-inline-start: 0;
+      opacity: 0.75;
+      position: absolute;
+      inset-block-start: 0;
+      width: 100%;
+    }
+  }
+
+  /* ===== Apple Pay button =============================================== */
+
+  .braintree-applepay-container-product {
+    display: inline-block;
+
+    & .braintree-apple-pay-button {
+      margin-block: 0 1.5rem; /* 15px */
+      margin-inline: 0;
+      padding: 1rem 0; /* 10px 0 */
+    }
+  }
+
+  .braintree-apple-pay-button {
+    -apple-pay-button-type: plain;
+    -webkit-appearance: -apple-pay-button;
+    background-color: var(--color-black);
+    background-image: -webkit-named-image(apple-pay-logo-black);
+    background-position: 50% 50%;
+    background-repeat: no-repeat;
+    background-size: 100% calc(60% + 2px);
+    border-radius: 5px;
+    cursor: pointer;
+    display: block;
+    height: 4rem; /* 40px */
+    min-height: 4rem;
+    margin: var(--indent-base) auto; /* 20px auto */
+    transition: background-color 0.15s;
+  }
+
+  .braintree-applepay-minicart.minicart .braintree-apple-pay-button,
+  .braintree-applepay-minicart.cart .braintree-apple-pay-button {
+    width: 100%;
+  }
+
+  /* ===== PP Credit calculator =========================================== */
+
+  .ppcredit-summary {
+    /* source palette restored (the shipped gradient stop was invalid) */
+    background: linear-gradient(to right, #009cde, #003087);
+    color: var(--color-white);
+    margin: var(--indent-s) 0; /* 10px 0 */
+    padding: 1.5rem; /* 15px */
+    text-align: center;
+  }
+
+  .ppcreditcalc-container {
+    background: var(--color-white);
+    border: 1px solid #dedede; /* @braintree_color-ppcredit-grey */
+  }
+
+  .ppcreditcalc-header {
+    background: var(--color-white);
+    padding: 1.5rem; /* 15px */
+  }
+
+  .ppcreditcalc-legal {
+    background-color: #eee; /* @color-gray-darken0 */
+    border-block-start: 1px solid #dedede;
+    font-size: var(--font-size-s); /* 14px */
+    line-height: 2rem;
+    padding: 1.5rem; /* 15px */
+  }
+
+  .ppcreditcalc-instalments {
+    background-color: #eee; /* @color-gray-darken0 */
+    border-block-start: 1px solid #dedede;
+    border-block-end: 1px solid #dedede;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+
+    & li {
+      display: inline-block;
+      margin: 0;
+      padding: 0;
+    }
+  }
+
+  .ppcreditcalc-instalments-term {
+    color: var(--color-black);
+    display: block;
+    padding: 1rem 1.5rem; /* 10px 15px */
+
+    &:hover {
+      background: #009cde; /* @braintree_color-ppcredit-light (invalid in source) */
+      color: var(--color-white);
+      text-decoration: none;
+    }
+
+    &.active {
+      background: #003087; /* @braintree_color-ppcredit-dark (invalid in source) */
+      color: var(--color-white);
+    }
+  }
+
+  .ppcreditcalc-instalment-summary {
+    padding: 1.5rem; /* 15px */
+
+    & dl {
+      margin: 0;
+    }
+
+    & dt {
+      display: inline-block;
+      width: 50%;
+    }
+
+    & dd {
+      display: inline-block;
+    }
+  }
+
+  /* ===== credit card form =============================================== */
+
+  #braintree_expirationDate {
+    width: 9rem; /* 90px */
+  }
+
+  /* ===== Google Pay button ============================================== */
+
+  button.braintree-googlepay-button {
+    background-origin: content-box;
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-size: contain;
+    border: 0;
+    border-radius: 4px;
+    box-shadow: rgba(60, 64, 67, 0.3) 0 1px 1px 0, rgba(60, 64, 67, 0.15) 0 1px 3px 1px;
+    cursor: pointer;
+    height: 4rem; /* 40px */
+    min-height: 4rem;
+    padding: 1.1rem 2.4rem; /* 11px 24px */
+
+    &.black {
+      background-color: var(--color-black);
+      box-shadow: none;
+      padding-block: 1.2rem var(--indent-s); /* 12px 24px 10px */
+      padding-inline: 2.4rem;
+
+      &:active {
+        background-color: #5f6368; /* @braintree_color-gpay-black__active__background */
+      }
+
+      &:hover {
+        background-color: #3c4043; /* @braintree_color-gpay-black__hover__background */
+      }
+    }
+
+    &.white {
+      background-color: var(--color-white);
+
+      &:active {
+        background-color: var(--color-white);
+      }
+
+      &:focus {
+        box-shadow: var(--color-gray91) 0 1px 1px 0, var(--color-gray91) 0 1px 3px; /* #e8e8e8 */
+      }
+
+      &:hover {
+        background-color: #f8f8f8; /* @color-white-fog */
+      }
+    }
+
+    &.short {
+      min-width: 9rem; /* 90px */
+      width: 16rem; /* 160px */
+    }
+
+    &.black.short {
+      background-image: url(https://www.gstatic.com/instantbuy/svg/dark_gpay.svg);
+    }
+
+    &.white.short {
+      background-image: url(https://www.gstatic.com/instantbuy/svg/light_gpay.svg);
+    }
+
+    &.long {
+      width: 100%;
+    }
+
+    &.white.long {
+      background-image: url(https://www.gstatic.com/instantbuy/svg/light/en.svg);
+    }
+
+    &.black.long {
+      background-image: url(https://www.gstatic.com/instantbuy/svg/dark/en.svg);
+    }
+  }
+
+  .googlepay-minicart-logo {
+    text-align: center;
+  }
+
+  /* ===== card-type icons / selected card ================================ */
+
+  .checkout-payment-method .credit-card-types.braintree-credit-card-types img {
+    -webkit-filter: none;
+    -webkit-transition: none;
+    width: 3rem; /* 30px */
+  }
+
+  .braintree-card-control {
+    position: relative;
+  }
+
+  .braintree-credit-card-selected {
+    inset-inline-start: var(--indent-s); /* 10px */
+    position: absolute;
+    z-index: 10;
+  }
+
+  .braintree-paypal-logo.oneclick-container {
+    width: 100%;
+  }
+
+  /* ===== ACH direct debit form ========================================== */
+
+  #payment_form_braintree_ach_direct_debit .field > .fields .field {
+    & .label {
+      font-weight: var(--font-weight-semibold); /* 600 */
+    }
+
+    &.required > .label::after {
+      color: var(--color-error); /* @color-red10, #e02b27 */
+      content: '*';
+      font-size: 1.8rem;
+      margin-block: 0;
+      margin-inline: 5px 0;
+    }
+
+    & .control {
+      margin-block: var(--indent-s) 0;
+      margin-inline: 0 var(--indent-s); /* 10px 10px 0 0 */
+
+      & input[type='text']::placeholder,
+      & input[type='number']::placeholder {
+        color: lightgrey;
+      }
+    }
+  }
+
+  /* ===== local payment methods ========================================== */
+
+  #payment-method-braintree-lpm .primary {
+    width: 100%;
+
+    & .action {
+      margin-block-end: 1.2rem; /* 12px */
+      width: 100%;
+
+      & img {
+        height: 4rem; /* 40px */
+      }
+    }
+  }
+
+  #payment-method-braintree-applepay #braintree_applepay_enable_vault {
+    padding-block-start: var(--indent-base); /* 20px */
+  }
+
+  /* ===== vault (stored card / Apple Pay) CVV re-entry =================== */
+
+  #payment-method-braintree-cc-vault,
+  #payment-method-braintree-applepay-vault {
+    & .field.required .label {
+      font-weight: var(--font-weight-semibold); /* 600 */
+
+      &::after {
+        content: '*';
+        color: var(--color-error); /* #e02b27 */
+        font-size: 1.8rem;
+        margin-block: 0;
+        margin-inline: 5px 0;
+      }
+    }
+
+    & .field .hosted-control {
+      background: var(--color-white);
+      background-clip: padding-box;
+      border: 1px solid var(--color-gray76); /* #c2c2c2 */
+      border-radius: 1px;
+      box-sizing: border-box;
+      font-family: var(--font-family-base);
+      font-size: var(--font-size-base); /* 16px */
+      height: 3.2rem; /* 32px */
+      padding: 0 0.9rem; /* 0 9px */
+      position: relative;
+      vertical-align: baseline;
+      width: 5rem;
+
+      &.braintree-hosted-fields-invalid:not(.braintree-hosted-fields-focused) ~ .hosted-error {
+        height: auto;
+        opacity: 1;
+      }
+    }
+
+    & .field .hosted-error {
+      clear: both;
+      color: var(--color-error); /* #e02b27 */
+      font-size: var(--font-size-s); /* 14px */
+      height: 0;
+      margin-block-start: 0.7rem; /* 7px */
+      opacity: 0;
+    }
+  }
+
+  #braintree-applepay-checkout-btn,
+  #braintree-google-checkout-btn {
+    width: 24rem; /* 240px */
+  }
+
+  /* ===== PayPal ========================================================= */
+
+  .braintree-paypal-fieldset {
+    display: none;
+  }
+
+  .braintree-paypal-buttons,
+  .braintree-paypal-vault {
+    margin-block-start: var(--indent-base); /* 20px */
+  }
+
+  /* ===== hosted-fields card form (payment method) ======================= */
+
+  .payment-method-braintree {
+    & .hosted-control {
+      border: 1px solid var(--color-gray76); /* #c2c2c2 */
+      height: 3.2rem; /* 32px */
+      max-width: 30rem; /* 300px */
+      padding: 0.8rem 1.5rem; /* 8px 15px */
+
+      &.braintree-hosted-fields-invalid:not(.braintree-hosted-fields-focused) ~ .hosted-error {
+        height: auto;
+        opacity: 1;
+      }
+    }
+
+    & .hosted-error {
+      clear: both;
+      color: var(--color-error); /* #e02b27 */
+      font-size: var(--font-size-s); /* 14px */
+      height: 0;
+      margin-block-start: 0.7rem; /* 7px */
+      opacity: 0;
+    }
+
+    & .cvv {
+      max-width: 20rem; /* 200px */
+      position: relative;
+
+      & .field-tooltip {
+        inset-inline-end: var(--indent-l); /* 30px */
+        inset-block-start: var(--indent-s); /* 10px */
+      }
+    }
+  }
+
+  /* room for the card-type icon the SDK overlays in the number field */
+  #braintree_cc_number {
+    padding-inline-start: 6.8rem; /* 68px */
+  }
+
+  /* ===== express payments band (PDP / cart) ============================= */
+
+  .braintree-express-payments {
+    display: flex;
+    flex-wrap: wrap;
+
+    & > div {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--indent-s); /* 10px */
+    }
+
+    & span {
+      display: block;
+      font-size: 1.8rem; /* 18px */
+      margin: var(--indent-base) 0; /* 20px 0 */
+
+      &.express-payment-title {
+        width: 100%;
+      }
+
+      /* the "or" divider: centred text over a 1px rule */
+      &.express-payment-subtitle {
+        align-items: center;
+        display: flex;
+        position: relative;
+        width: 100%;
+
+        & > span {
+          background: var(--page-background-color); /* #fff */
+          display: block;
+          margin: 0 auto;
+          padding: 0 var(--indent-xs); /* 5px */
+        }
+
+        &::before {
+          background: var(--border-color-base); /* @color-gray80, #ccc */
+          content: '';
+          display: block;
+          height: 1px;
+          position: absolute;
+          width: 100%;
+          z-index: -1;
+        }
+      }
+    }
+
+    & > div > div {
+      width: 24rem; /* 240px */
+    }
+
+    & .braintree-googlepay-button,
+    & .braintree-apple-pay-button {
+      margin: 0;
+      min-height: 3rem; /* 30px */
+      height: 3.5rem; /* 35px */
+    }
+  }
+
+  /* ===== Pay Later message containers =================================== */
+
+  .paypal-braintree-paylater-message-container-pdp {
+    padding-block: 0 1rem; /* 0 10px 10px */
+    padding-inline: 1rem;
+
+    .page-product-giftcard & {
+      padding-block: 0 1rem;
+      padding-inline: 0;
+    }
+  }
+
+  .paypal-braintree-paylater-message-container-cart {
+    padding: 0 1.5rem; /* 0 15px */
+  }
+
+  /* ===== mobile ========================================================= */
+
+  @media (--screen-s-max) {
+    .braintree-three-d-modal .bt-modal-frame {
+      width: 100%;
+    }
+  }
+
+  @media (--screen-m-max) {
+    .braintree-applepay-container-product {
+      display: block;
+
+      & .braintree-apple-pay-button {
+        width: 100%;
+      }
+    }
+
+    div.braintree-express-payments {
+      & > div > div {
+        width: 100%;
+      }
+
+      & .braintree-googlepay-button.long {
+        height: 4.5rem; /* 45px */
+        width: 100%;
+      }
+
+      & .braintree-apple-pay-button {
+        height: 4.5rem; /* 45px */
+      }
+    }
+  }
+
+  /* ===== desktop ======================================================== */
+
+  @media (--screen-m) {
+    .braintree-express-paylater-message-container {
+      order: 1;
+    }
+
+    .paypal-braintree-paylater-message-container-pdp {
+      padding-block: 0 1rem; /* 0 0 10px */
+      padding-inline: 0;
+    }
+
+    .paypal-braintree-paylater-message-container-cart {
+      padding: 0;
+    }
+  }
+}

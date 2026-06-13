@@ -1,0 +1,15 @@
+{
+    "name": "renaissance/module-style-braintree",
+    "description": "Renaissance Themes: PayPal_Braintree module styling",
+    "type": "magento2-component",
+    "license": "OSL-3.0",
+    "require": {
+        "renaissance/theme-frontend-open-source": "^1.0",
+        "paypal/module-braintree-core": "*"
+    },
+    "extra": {
+        "map": [
+            ["module.css", "app/design/frontend/Renaissance/open-source/PayPal_Braintree/web/css/source/module.css"]
+        ]
+    }
+}
